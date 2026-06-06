@@ -1,6 +1,56 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: student-api
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root123
+        - name: MYSQL_DATABASE
+          value: studentdb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: studenthub-deployment
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: studenthub
+  template:
+    metadata:
+      labels:
+        app: studenthub
+    spec:
+      containers:
+      - name: studenthub
+        image: chinninaidu/studenthub-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DB_HOST
+          value: mysql
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USER
+          value: root
+        - name: DB_PASSWORD
+          value: root123
+        - name: DB_NAME
+          value: studentdb
