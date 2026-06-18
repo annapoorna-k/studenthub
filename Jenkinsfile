@@ -76,22 +76,5 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                kubectl apply -f k8s/
-                kubectl get pods
-                kubectl get svc
-                '''
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "PIPELINE SUCCESS 🚀 Deployment completed"
-        }
-
-        failure {
-            echo "PIPELINE FAILED ❌ Check logs"
-        }
-    }
-}
+                kubectl apply
 
