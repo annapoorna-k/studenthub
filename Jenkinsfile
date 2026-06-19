@@ -9,7 +9,7 @@ stages {
     stage('Checkout Code') {
         steps {
             git branch: 'main',
-                url: 'https://github.com/aegletek/StudentHub.git'
+                url: 'https://github.com/annapoorna-k/StudentHub.git'
         }
     }
     stage('Verify Files') {
