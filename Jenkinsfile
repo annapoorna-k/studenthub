@@ -1,7 +1,7 @@
 pipeline {
 agent any
 environment {
-    DOCKER_IMAGE = "chinninaidu/studenthub-app"
+    DOCKER_IMAGE = "yashuraj/studenthub-app"
     DOCKER_TAG = "latest"
 }
 stages {
