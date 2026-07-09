@@ -1,83 +1,80 @@
 trigger:
-  branches:
-    include:
-      - main
+- main
 
 variables:
-  acrServiceConnection: 'pythoncr-connection'
-  azureSubscription: 'rg-python-connection'
-  imageRepository: 'studenthub'
-  containerRegistry: 'pythoncr.azurecr.io'
-  aksResourceGroup: 'rg-python'
-  aksClusterName: 'aks-python'
-  imageTag: '$(Build.BuildId)'
+- template: variables.yml
+
+pool:
+  vmImage: $(vmImage)
 
 stages:
 
+# ===========================
+# Build Stage
+# ===========================
 - stage: Build
-  displayName: Build & Push Image
+  displayName: Build and Push Docker Image
 
   jobs:
   - job: Build
-    pool:
-      vmImage: ubuntu-latest
+    displayName: Build Image
 
     steps:
 
+    - checkout: self
+
     - task: Docker@2
-      displayName: Build and Push Docker Image
+      displayName: Login to ACR
       inputs:
-        containerRegistry: '$(acrServiceConnection)'
-        repository: '$(imageRepository)'
-        command: 'buildAndPush'
-        Dockerfile: '**/Dockerfile'
+        command: login
+        containerRegistry: $(acrServiceConnection)
+
+    - task: Docker@2
+      displayName: Build and Push Image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: Dockerfile
+        containerRegistry: $(acrServiceConnection)
         tags: |
           $(imageTag)
           latest
 
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Kubernetes Manifests
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/k8s'
-        artifact: 'k8s-manifests'
-
+# ===========================
+# Deploy Stage
+# ===========================
 - stage: Deploy
   displayName: Deploy to AKS
+
   dependsOn: Build
-  condition: succeeded()
 
   jobs:
-  - deployment: Deploy
-    displayName: Deploy to AKS
-    environment: production
 
-    pool:
-      vmImage: ubuntu-latest
+  - deployment: DeployToAKS
+
+    environment: aks
 
     strategy:
       runOnce:
+
         deploy:
+
           steps:
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Kubernetes Manifests
-            inputs:
-              artifact: 'k8s-manifests'
-              path: '$(Pipeline.Workspace)/k8s'
+          - checkout: self
 
           - task: KubernetesManifest@1
             displayName: Deploy to AKS
+
             inputs:
               action: deploy
-              connectionType: azureResourceManager
-              azureSubscriptionConnection: '$(azureSubscription)'
-              azureResourceGroup: '$(aksResourceGroup)'
-              kubernetesCluster: '$(aksClusterName)'
-              namespace: default
+              kubernetesServiceConnection: $(kubernetesServiceConnection)
+              namespace: $(namespace)
+
               manifests: |
-                $(Pipeline.Workspace)/k8s/postgres-secret.yaml
-                $(Pipeline.Workspace)/k8s/postgres.yaml
-                $(Pipeline.Workspace)/k8s/deployment.yaml
-                $(Pipeline.Workspace)/k8s/service.yaml
+                k8s/deployment.yml
+                k8s/service.yml
+
               containers: |
+                $(acrLoginServer)/$(imageRepository):$(imageTag)
                 $(containerRegistry)/$(imageRepository):$(imageTag)
