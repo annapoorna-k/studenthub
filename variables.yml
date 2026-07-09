@@ -1,0 +1,26 @@
+variables:
+
+  # Azure Resource Manager
+  azureServiceConnection: 'rg-py-connection'
+  resourceGroup: 'rg-eastus'
+  location: 'eastus'
+
+  # Azure Container Registry
+  acrName: 'newacr'
+  acrLoginServer: 'newacr.azurecr.io'
+  acrServiceConnection: 'acrpy-connection'
+  imageRepository: 'studenthub'
+
+  # AKS
+  aksCluster: 'aks-new'
+  kubernetesServiceConnection: 'pyaks-connection'
+  namespace: 'default'
+
+  # GitHub
+  githubServiceConnection: 'github-serviceconnection'
+
+  # Build
+  imageTag: '$(Build.BuildId)'
+
+  # Agent
+  vmImage: 'ubuntu-latest'
