@@ -23,6 +23,17 @@ stages:
 
     - checkout: self
 
+    # Debug - List repository files
+    - script: |
+        echo "=============================="
+        echo "Current directory:"
+        pwd
+        echo ""
+        echo "Repository contents:"
+        find .
+        echo "=============================="
+      displayName: "List Repository Files"
+
     - task: Docker@2
       displayName: Login to ACR
       inputs:
@@ -45,27 +56,34 @@ stages:
 # ===========================
 - stage: Deploy
   displayName: Deploy to AKS
-
   dependsOn: Build
 
   jobs:
-
   - deployment: DeployToAKS
-
+    displayName: Deploy Application
     environment: aks
 
     strategy:
       runOnce:
-
         deploy:
 
           steps:
 
           - checkout: self
 
+          # Debug - List repository files
+          - script: |
+              echo "=============================="
+              echo "Current directory:"
+              pwd
+              echo ""
+              echo "Repository contents:"
+              find .
+              echo "=============================="
+            displayName: "List Repository Files"
+
           - task: KubernetesManifest@1
             displayName: Deploy to AKS
-
             inputs:
               action: deploy
               kubernetesServiceConnection: $(kubernetesServiceConnection)
@@ -77,4 +95,3 @@ stages:
 
               containers: |
                 $(acrLoginServer)/$(imageRepository):$(imageTag)
-                $(containerRegistry)/$(imageRepository):$(imageTag)
